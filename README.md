@@ -21,15 +21,39 @@
 
 ### 本地运行
 
-1. 克隆或下载项目
-2. 在项目目录中启动本地服务器
+#### 方式1：一键启动（推荐）
+
+**Windows用户：**
+双击运行 `start.bat` 文件
+
+**Mac/Linux用户：**
+在终端运行：
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+#### 方式2：手动启动
 
 使用Python启动服务器：
 ```bash
 python -m http.server 8000
 ```
 
-3. 在浏览器中访问：`http://localhost:8000`
+### 访问网站
+
+启动服务器后，在浏览器中访问：**http://localhost:8000**
+
+## 部署到 GitHub Pages
+
+您也可以将项目部署到 GitHub Pages，让任何人都能在线访问：
+
+1. 进入项目的 GitHub 设置页面
+2. 找到 "Pages" 选项
+3. 在 "Source" 中选择 `main` 分支
+4. 点击 "Save"
+5. 稍等几分钟，您的网站将可以通过以下地址访问：
+   `https://xinmengliu0-sketch.github.io/neon-vision/`
 
 ## 项目结构
 
