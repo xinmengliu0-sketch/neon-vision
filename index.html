@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>刘新蒙项目实践 - 电脑性能检测</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 加载动画 -->
+    <div class="loader" id="loader">
+        <div class="loader-content">
+            <div class="loader-spinner"></div>
+            <p class="loader-text">正在检测硬件...</p>
+        </div>
+    </div>
+
+    <!-- SVG渐变定义 -->
+    <svg style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                <stop offset="100%" style="stop-color:#00e5ff;stop-opacity:1" />
+            </linearGradient>
+        </defs>
+    </svg>
+    
+    <!-- 主容器 -->
+    <div class="app-container" id="appContainer">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="nav-brand">
+                <div class="brand-icon">⚡</div>
+                <span class="brand-name">刘新蒙项目实践</span>
+            </div>
+            <div class="nav-links">
+                <button class="nav-link active" data-page="dashboard">首页</button>
+                <button class="nav-link" data-page="hardware">硬件信息</button>
+                <button class="nav-link" data-page="test">性能测试</button>
+                <button class="nav-link" data-page="history">历史记录</button>
+            </div>
+        </nav>
+
+        <!-- 页面内容容器 -->
+        <main class="main-content">
+            <!-- 首页/仪表板 -->
+            <section class="page-section active" id="dashboard">
+                <div class="dashboard-header">
+                    <h1 class="page-title">电脑性能检测</h1>
+                    <p class="page-subtitle">检测您的电脑配置，评估性能表现</p>
+                </div>
+
+                <!-- 硬件概览卡片 -->
+                <div class="hardware-overview">
+                    <div class="overview-card">
+                        <div class="card-icon cpu-icon">🖥️</div>
+                        <div class="card-content">
+                            <h3 class="card-title">处理器</h3>
+                            <p class="card-value" id="cpuModel">检测中...</p>
+                            <p class="card-detail" id="cpuDetail">-</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon memory-icon">💾</div>
+                        <div class="card-content">
+                            <h3 class="card-title">内存</h3>
+                            <p class="card-value" id="memoryTotal">检测中...</p>
+                            <p class="card-detail" id="memoryDetail">-</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon gpu-icon">🎮</div>
+                        <div class="card-content">
+                            <h3 class="card-title">显卡</h3>
+                            <p class="card-value" id="gpuModel">检测中...</p>
+                            <p class="card-detail" id="gpuDetail">-</p>
+                        </div>
+                    </div>
+                    <div class="overview-card">
+                        <div class="card-icon storage-icon">💿</div>
+                        <div class="card-content">
+                            <h3 class="card-title">存储</h3>
+                            <p class="card-value" id="storageInfo">检测中...</p>
+                            <p class="card-detail" id="storageDetail">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快速操作区域 -->
+                <div class="quick-actions">
+                    <button class="btn btn-primary btn-large pulse-animation" id="startAllTest">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">开始完整测试</span>
+                    </button>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" data-page="hardware">
+                            <span class="btn-icon">📊</span>
+                            <span class="btn-text">查看硬件详情</span>
+                        </button>
+                        <button class="btn btn-secondary" data-page="history">
+                            <span class="btn-icon">📜</span>
+                            <span class="btn-text">查看历史记录</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 最新测试结果 -->
+                <div class="latest-result" id="latestResult" style="display: none;">
+                    <h2 class="section-title">最新测试结果</h2>
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="result-date" id="latestTestDate">-</div>
+                            <div class="result-score">
+                                <span class="score-label">综合评分</span>
+                                <span class="score-value" id="latestOverallScore">-</span>
+                            </div>
+                        </div>
+                        <div class="result-scores">
+                            <div class="score-item">
+                                <span class="score-name">CPU</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="latestCpuScore" style="width: 0%"></div>
+                                </div>
+                                <span class="score-number" id="latestCpuScoreNum">-</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-name">内存</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="latestMemoryScore" style="width: 0%"></div>
+                                </div>
+                                <span class="score-number" id="latestMemoryScoreNum">-</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-name">显卡</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="latestGpuScore" style="width: 0%"></div>
+                                </div>
+                                <span class="score-number" id="latestGpuScoreNum">-</span>
+                            </div>
+                            <div class="score-item">
+                                <span class="score-name">存储</span>
+                                <div class="score-bar">
+                                    <div class="score-fill" id="latestStorageScore" style="width: 0%"></div>
+                                </div>
+                                <span class="score-number" id="latestStorageScoreNum">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 硬件信息页面 -->
+            <section class="page-section" id="hardware">
+                <div class="page-header">
+                    <h1 class="page-title">硬件详细信息</h1>
+                    <p class="page-subtitle">完整的系统配置信息</p>
+                </div>
+
+                <div class="hardware-details">
+                    <!-- CPU信息 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon cpu-icon">🖥️</div>
+                            <h2 class="card-title">处理器 (CPU)</h2>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-item">
+                                <span class="detail-label">型号</span>
+                                <span class="detail-value" id="hwCpuModel">检测中...</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">核心数</span>
+                                <span class="detail-value" id="hwCpuCores">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">线程数</span>
+                                <span class="detail-value" id="hwCpuThreads">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">架构</span>
+                                <span class="detail-value" id="hwCpuArch">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 内存信息 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon memory-icon">💾</div>
+                            <h2 class="card-title">内存 (RAM)</h2>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-item">
+                                <span class="detail-label">总容量</span>
+                                <span class="detail-value" id="hwMemTotal">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">可用容量</span>
+                                <span class="detail-value" id="hwMemAvailable">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">已使用</span>
+                                <span class="detail-value" id="hwMemUsed">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">使用率</span>
+                                <span class="detail-value" id="hwMemUsage">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 显卡信息 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon gpu-icon">🎮</div>
+                            <h2 class="card-title">显卡 (GPU)</h2>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-item">
+                                <span class="detail-label">型号</span>
+                                <span class="detail-value" id="hwGpuModel">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">显存</span>
+                                <span class="detail-value" id="hwGpuVram">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">驱动版本</span>
+                                <span class="detail-value" id="hwGpuDriver">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 存储信息 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon storage-icon">💿</div>
+                            <h2 class="card-title">存储 (Storage)</h2>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-item">
+                                <span class="detail-label">类型</span>
+                                <span class="detail-value" id="hwStorageType">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">总容量</span>
+                                <span class="detail-value" id="hwStorageTotal">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 系统信息 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon system-icon">🔧</div>
+                            <h2 class="card-title">系统信息</h2>
+                        </div>
+                        <div class="detail-list">
+                            <div class="detail-item">
+                                <span class="detail-label">操作系统</span>
+                                <span class="detail-value" id="hwOs">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">浏览器</span>
+                                <span class="detail-value" id="hwBrowser">-</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">平台</span>
+                                <span class="detail-value" id="hwPlatform">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 性能测试页面 -->
+            <section class="page-section" id="test">
+                <div class="page-header">
+                    <h1 class="page-title">性能测试</h1>
+                    <p class="page-subtitle">选择要测试的项目，开始评估您的电脑性能</p>
+                </div>
+
+                <!-- 测试选择 -->
+                <div class="test-selection" id="testSelection">
+                    <div class="test-option-card" data-test="cpu">
+                        <div class="test-option-header">
+                            <div class="test-icon cpu-icon">🖥️</div>
+                            <div class="test-info">
+                                <h3 class="test-title">CPU运算性能</h3>
+                                <p class="test-description">测试处理器的运算能力</p>
+                            </div>
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" class="test-checkbox" checked data-test="cpu">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <div class="test-duration">预计时间: ~10秒</div>
+                    </div>
+
+                    <div class="test-option-card" data-test="memory">
+                        <div class="test-option-header">
+                            <div class="test-icon memory-icon">💾</div>
+                            <div class="test-info">
+                                <h3 class="test-title">内存读写性能</h3>
+                                <p class="test-description">测试内存的读写速度和延迟</p>
+                            </div>
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" class="test-checkbox" checked data-test="memory">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <div class="test-duration">预计时间: ~8秒</div>
+                    </div>
+
+                    <div class="test-option-card" data-test="gpu">
+                        <div class="test-option-header">
+                            <div class="test-icon gpu-icon">🎮</div>
+                            <div class="test-info">
+                                <h3 class="test-title">图形渲染性能</h3>
+                                <p class="test-description">测试GPU的渲染能力</p>
+                            </div>
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" class="test-checkbox" checked data-test="gpu">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <div class="test-duration">预计时间: ~12秒</div>
+                    </div>
+
+                    <div class="test-option-card" data-test="storage">
+                        <div class="test-option-header">
+                            <div class="test-icon storage-icon">💿</div>
+                            <div class="test-info">
+                                <h3 class="test-title">存储I/O性能</h3>
+                                <p class="test-description">测试存储设备的读写速度</p>
+                            </div>
+                            <label class="checkbox-wrapper">
+                                <input type="checkbox" class="test-checkbox" checked data-test="storage">
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+                        <div class="test-duration">预计时间: ~8秒</div>
+                    </div>
+                </div>
+
+                <!-- 开始测试按钮 -->
+                <div class="test-actions">
+                    <button class="btn btn-primary btn-large" id="startTests">
+                        <span class="btn-icon">▶️</span>
+                        <span class="btn-text">开始测试</span>
+                    </button>
+                </div>
+
+                <!-- 测试进度界面 -->
+                <div class="test-progress" id="testProgress" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-steps">
+                            <div class="step-item" id="stepCpu">
+                                <div class="step-icon">🖥️</div>
+                                <div class="step-info">
+                                    <div class="step-title">CPU测试</div>
+                                    <div class="step-status">等待中</div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="stepMemory">
+                                <div class="step-icon">💾</div>
+                                <div class="step-info">
+                                    <div class="step-title">内存测试</div>
+                                    <div class="step-status">等待中</div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="stepGpu">
+                                <div class="step-icon">🎮</div>
+                                <div class="step-info">
+                                    <div class="step-title">显卡测试</div>
+                                    <div class="step-status">等待中</div>
+                                </div>
+                            </div>
+                            <div class="step-item" id="stepStorage">
+                                <div class="step-icon">💿</div>
+                                <div class="step-info">
+                                    <div class="step-title">存储测试</div>
+                                    <div class="step-status">等待中</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="progress-bar-container">
+                            <div class="progress-text">
+                                <span id="currentTest">准备中...</span>
+                                <span id="progressPercent">0%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-danger" id="cancelTest">
+                            <span class="btn-icon">⏹️</span>
+                            <span class="btn-text">取消测试</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 测试画布（用于GPU测试） -->
+                <canvas id="testCanvas" style="display: none; position: fixed; top: -9999px; left: -9999px;"></canvas>
+            </section>
+
+            <!-- 性能报告页面 -->
+            <section class="page-section" id="report">
+                <div class="page-header">
+                    <h1 class="page-title">性能测试报告</h1>
+                    <p class="page-subtitle" id="reportDate">-</p>
+                </div>
+
+                <!-- 综合评分 -->
+                <div class="overall-score-card">
+                    <div class="score-circle">
+                        <svg viewBox="0 0 100 100" class="score-svg">
+                            <circle cx="50" cy="50" r="45" class="score-bg"></circle>
+                            <circle cx="50" cy="50" r="45" class="score-progress" id="scoreCircle"></circle>
+                        </svg>
+                        <div class="score-display">
+                            <span class="score-number" id="overallScore">0</span>
+                            <span class="score-label">综合评分</span>
+                        </div>
+                    </div>
+                    <div class="score-description" id="scoreDescription">正在计算...</div>
+                </div>
+
+                <!-- 各项评分 -->
+                <div class="scores-grid">
+                    <div class="score-detail-card">
+                        <div class="score-detail-header">
+                            <div class="card-icon cpu-icon">🖥️</div>
+                            <div class="score-detail-info">
+                                <h3 class="score-detail-title">CPU性能</h3>
+                                <div class="score-detail-value" id="cpuScore">0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar-large">
+                            <div class="score-fill-large" id="cpuScoreBar" style="width: 0%"></div>
+                        </div>
+                        <div class="score-details-list" id="cpuDetails">
+                            <div class="score-detail-item">
+                                <span class="detail-label">单核性能</span>
+                                <span class="detail-value" id="cpuSingleCore">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">多核性能</span>
+                                <span class="detail-value" id="cpuMultiCore">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">运算速度</span>
+                                <span class="detail-value" id="cpuOperations">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="score-detail-card">
+                        <div class="score-detail-header">
+                            <div class="card-icon memory-icon">💾</div>
+                            <div class="score-detail-info">
+                                <h3 class="score-detail-title">内存性能</h3>
+                                <div class="score-detail-value" id="memoryScore">0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar-large">
+                            <div class="score-fill-large" id="memoryScoreBar" style="width: 0%"></div>
+                        </div>
+                        <div class="score-details-list" id="memoryDetails">
+                            <div class="score-detail-item">
+                                <span class="detail-label">读取速度</span>
+                                <span class="detail-value" id="memReadSpeed">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">写入速度</span>
+                                <span class="detail-value" id="memWriteSpeed">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">延迟</span>
+                                <span class="detail-value" id="memLatency">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="score-detail-card">
+                        <div class="score-detail-header">
+                            <div class="card-icon gpu-icon">🎮</div>
+                            <div class="score-detail-info">
+                                <h3 class="score-detail-title">显卡性能</h3>
+                                <div class="score-detail-value" id="gpuScore">0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar-large">
+                            <div class="score-fill-large" id="gpuScoreBar" style="width: 0%"></div>
+                        </div>
+                        <div class="score-details-list" id="gpuDetails">
+                            <div class="score-detail-item">
+                                <span class="detail-label">帧率</span>
+                                <span class="detail-value" id="gpuFps">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">绘制调用</span>
+                                <span class="detail-value" id="gpuDrawCalls">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">三角形数</span>
+                                <span class="detail-value" id="gpuTriangles">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="score-detail-card">
+                        <div class="score-detail-header">
+                            <div class="card-icon storage-icon">💿</div>
+                            <div class="score-detail-info">
+                                <h3 class="score-detail-title">存储性能</h3>
+                                <div class="score-detail-value" id="storageScore">0</div>
+                            </div>
+                        </div>
+                        <div class="score-bar-large">
+                            <div class="score-fill-large" id="storageScoreBar" style="width: 0%"></div>
+                        </div>
+                        <div class="score-details-list" id="storageDetails">
+                            <div class="score-detail-item">
+                                <span class="detail-label">读取速度</span>
+                                <span class="detail-value" id="storageRead">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">写入速度</span>
+                                <span class="detail-value" id="storageWrite">-</span>
+                            </div>
+                            <div class="score-detail-item">
+                                <span class="detail-label">访问时间</span>
+                                <span class="detail-value" id="storageAccess">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 性能雷达图 -->
+                <div class="chart-card">
+                    <h2 class="chart-title">性能对比分析</h2>
+                    <div class="chart-container">
+                        <canvas id="radarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 优化建议 -->
+                <div class="recommendations-card">
+                    <h2 class="recommendations-title">💡 优化建议</h2>
+                    <div class="recommendations-list" id="recommendationsList">
+                        <!-- 建议将通过JS动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="report-actions">
+                    <button class="btn btn-secondary" id="saveReport">
+                        <span class="btn-icon">💾</span>
+                        <span class="btn-text">保存报告</span>
+                    </button>
+                    <button class="btn btn-primary" id="newTest">
+                        <span class="btn-icon">🔄</span>
+                        <span class="btn-text">重新测试</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 历史记录页面 -->
+            <section class="page-section" id="history">
+                <div class="page-header">
+                    <h1 class="page-title">测试历史记录</h1>
+                    <p class="page-subtitle">查看和对比您的性能测试结果</p>
+                </div>
+
+                <!-- 空状态 -->
+                <div class="empty-state" id="emptyHistory">
+                    <div class="empty-icon">📜</div>
+                    <h3 class="empty-title">暂无测试记录</h3>
+                    <p class="empty-description">完成性能测试后，您的测试结果将保存在这里</p>
+                    <button class="btn btn-primary" data-page="test">
+                        <span class="btn-icon">🚀</span>
+                        <span class="btn-text">开始首次测试</span>
+                    </button>
+                </div>
+
+                <!-- 历史记录列表 -->
+                <div class="history-list" id="historyList" style="display: none;">
+                    <div class="history-header">
+                        <span class="history-count" id="historyCount">0 条记录</span>
+                        <button class="btn btn-secondary btn-small" id="clearHistory">
+                            <span class="btn-icon">🗑️</span>
+                            <span class="btn-text">清空历史</span>
+                        </button>
+                    </div>
+                    <div class="history-items" id="historyItems">
+                        <!-- 历史记录项将通过JS动态生成 -->
+                    </div>
+                </div>
+
+                <!-- 对比视图 -->
+                <div class="comparison-view" id="comparisonView" style="display: none;">
+                    <div class="comparison-header">
+                        <h2 class="comparison-title">性能对比</h2>
+                        <button class="btn btn-secondary btn-small" id="closeComparison">关闭对比</button>
+                    </div>
+                    <div class="comparison-chart">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 通知提示 -->
+    <div class="notification" id="notification">
+        <div class="notification-icon" id="notificationIcon">✓</div>
+        <div class="notification-content">
+            <div class="notification-title" id="notificationTitle">提示</div>
+            <div class="notification-message" id="notificationMessage">消息内容</div>
+        </div>
+        <button class="notification-close" id="notificationClose">&times;</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="js/hardware.js"></script>
+    <script src="js/benchmark.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
