@@ -65,13 +65,13 @@ class PerformanceApp {
 
     updateHardwareDisplay() {
         document.getElementById('cpuModel').textContent = this.hardwareInfo.cpu.model;
-        document.getElementById('cpuDetail').textContent = `${this.hardwareInfo.cpu.cores} 核心`;
+        document.getElementById('cpuDetail').textContent = `${this.hardwareInfo.cpu.cores} 核心 / ${this.hardwareInfo.cpu.manufacturer}`;
         
         document.getElementById('memoryTotal').textContent = this.hardwareInfo.memory.totalGB;
         document.getElementById('memoryDetail').textContent = this.hardwareInfo.memory.availableGB ? `可用 ${this.hardwareInfo.memory.availableGB}` : '';
         
         document.getElementById('gpuModel').textContent = this.hardwareInfo.gpu.model;
-        document.getElementById('gpuDetail').textContent = this.hardwareInfo.gpu.driver || '';
+        document.getElementById('gpuDetail').textContent = this.hardwareInfo.gpu.vendor || '';
         
         document.getElementById('storageInfo').textContent = this.hardwareInfo.storage.totalGB || 'SSD/HDD';
         document.getElementById('storageDetail').textContent = this.hardwareInfo.storage.type || '';
@@ -81,19 +81,29 @@ class PerformanceApp {
         document.getElementById('hwCpuThreads').textContent = this.hardwareInfo.cpu.threads;
         document.getElementById('hwCpuArch').textContent = this.hardwareInfo.cpu.architecture;
 
+        const cpuManufacturerElement = document.getElementById('hwCpuManufacturer');
+        if (cpuManufacturerElement) {
+            cpuManufacturerElement.textContent = this.hardwareInfo.cpu.manufacturer;
+        }
+
         document.getElementById('hwMemTotal').textContent = this.hardwareInfo.memory.totalGB;
         document.getElementById('hwMemAvailable').textContent = this.hardwareInfo.memory.availableGB || 'N/A';
         document.getElementById('hwMemUsed').textContent = this.hardwareInfo.memory.usedGB || 'N/A';
-        document.getElementById('hwMemUsage').textContent = this.hardwareInfo.memory.usedGB ? '计算中...' : 'N/A';
+        document.getElementById('hwMemUsage').textContent = this.hardwareInfo.memory.type || 'N/A';
 
         document.getElementById('hwGpuModel').textContent = this.hardwareInfo.gpu.model;
         document.getElementById('hwGpuVram').textContent = this.hardwareInfo.gpu.vramGB;
         document.getElementById('hwGpuDriver').textContent = this.hardwareInfo.gpu.driver;
+        
+        const gpuVendorElement = document.getElementById('hwGpuVendor');
+        if (gpuVendorElement) {
+            gpuVendorElement.textContent = this.hardwareInfo.gpu.vendor;
+        }
 
         document.getElementById('hwStorageType').textContent = this.hardwareInfo.storage.type;
         document.getElementById('hwStorageTotal').textContent = this.hardwareInfo.storage.totalGB;
 
-        document.getElementById('hwOs').textContent = this.hardwareInfo.system.platform;
+        document.getElementById('hwOs').textContent = this.hardwareInfo.system.os;
         document.getElementById('hwBrowser').textContent = this.hardwareInfo.system.browser;
         document.getElementById('hwPlatform').textContent = navigator.userAgent.slice(0, 100) + '...';
     }
