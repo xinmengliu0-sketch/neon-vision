@@ -37,6 +37,12 @@ class HardwareDetector {
                 screen: this.detectScreen()
             }
         };
+        this.detectionLog = [];
+    }
+
+    log(message, data = null) {
+        this.detectionLog.push({ time: new Date().toISOString(), message, data });
+        console.log(`[HardwareDetector] ${message}`, data || '');
     }
 
     detectBrowser() {
@@ -97,6 +103,7 @@ class HardwareDetector {
     }
 
     async detectCPU() {
+        this.log('开始检测CPU');
         let cpuInfo = {
             model: '未知处理器',
             manufacturer: 'N/A',
@@ -106,14 +113,16 @@ class HardwareDetector {
         };
 
         const ua = navigator.userAgent.toLowerCase();
+        this.log('UserAgent分析', { ua: ua.substring(0, 200) });
         
         if (ua.includes('apple') || ua.includes('macintosh')) {
             cpuInfo.manufacturer = 'Apple';
-            if (ua.includes('m1')) cpuInfo.model = 'Apple M1';
-            else if (ua.includes('m2')) cpuInfo.model = 'Apple M2';
+            if (ua.includes('m4')) cpuInfo.model = 'Apple M4';
             else if (ua.includes('m3')) cpuInfo.model = 'Apple M3';
-            else if (ua.includes('m4')) cpuInfo.model = 'Apple M4';
+            else if (ua.includes('m2')) cpuInfo.model = 'Apple M2';
+            else if (ua.includes('m1')) cpuInfo.model = 'Apple M1';
             else cpuInfo.model = 'Apple Silicon';
+            this.log('识别到Apple处理器', cpuInfo.model);
         } else if (ua.includes('intel')) {
             cpuInfo.manufacturer = 'Intel';
             if (ua.includes('i9')) cpuInfo.model = 'Intel Core i9';
@@ -123,6 +132,7 @@ class HardwareDetector {
             else if (ua.includes('pentium')) cpuInfo.model = 'Intel Pentium';
             else if (ua.includes('celeron')) cpuInfo.model = 'Intel Celeron';
             else cpuInfo.model = 'Intel Processor';
+            this.log('识别到Intel处理器', cpuInfo.model);
         } else if (ua.includes('amd') || ua.includes('ryzen')) {
             cpuInfo.manufacturer = 'AMD';
             if (ua.includes('ryzen 9')) cpuInfo.model = 'AMD Ryzen 9';
@@ -130,9 +140,11 @@ class HardwareDetector {
             else if (ua.includes('ryzen 5')) cpuInfo.model = 'AMD Ryzen 5';
             else if (ua.includes('ryzen 3')) cpuInfo.model = 'AMD Ryzen 3';
             else cpuInfo.model = 'AMD Processor';
+            this.log('识别到AMD处理器', cpuInfo.model);
         } else if (ua.includes('arm')) {
             cpuInfo.manufacturer = 'ARM';
             cpuInfo.model = 'ARM Processor';
+            this.log('识别到ARM处理器', cpuInfo.model);
         }
 
         try {
@@ -143,6 +155,7 @@ class HardwareDetector {
                 if (debugInfo) {
                     const renderer = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                     const vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
+                    this.log('WebGL调试信息', { renderer, vendor });
                     
                     if (renderer && renderer.toLowerCase().includes('apple')) {
                         if (cpuInfo.model === '未知处理器') {
@@ -156,7 +169,7 @@ class HardwareDetector {
                 }
             }
         } catch (e) {
-            console.log('WebGL CPU检测受限', e);
+            this.log('WebGL CPU检测受限', e.message);
         }
 
         if (navigator.userAgent.includes('WOW64') || navigator.userAgent.includes('Win64')) {
@@ -172,27 +185,24 @@ class HardwareDetector {
         if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
             try {
                 const values = await navigator.userAgentData.getHighEntropyValues(['architecture', 'bitness', 'platformVersion']);
+                this.log('High Entropy Values', values);
                 if (values.architecture) cpuInfo.architecture = values.architecture;
                 if (values.bitness) cpuInfo.architecture += ` (${values.bitness}-bit)`;
             } catch (e) {
-                console.log('High entropy API受限', e);
+                this.log('High Entropy API受限', e.message);
             }
         }
 
         const performanceScore = await this.benchmarkCPU();
+        this.log('CPU性能基准测试得分', performanceScore);
         if (cpuInfo.model === '未知处理器') {
             if (performanceScore > 15000) cpuInfo.model = '高性能处理器';
             else if (performanceScore > 8000) cpuInfo.model = '中端处理器';
             else cpuInfo.model = '入门级处理器';
         }
 
-        this.hardwareInfo.cpu.model = cpuInfo.model;
-        this.hardwareInfo.cpu.manufacturer = cpuInfo.manufacturer;
-        this.hardwareInfo.cpu.architecture = cpuInfo.architecture;
-        if (cpuInfo.cores !== 'N/A') {
-            this.hardwareInfo.cpu.cores = cpuInfo.cores;
-            this.hardwareInfo.cpu.threads = cpuInfo.threads;
-        }
+        this.hardwareInfo.cpu = cpuInfo;
+        this.log('CPU检测完成', cpuInfo);
     }
 
     async benchmarkCPU() {
@@ -212,6 +222,7 @@ class HardwareDetector {
     }
 
     async detectMemory() {
+        this.log('开始检测内存');
         let memoryInfo = {
             totalGB: 'N/A',
             availableGB: 'N/A',
@@ -222,7 +233,9 @@ class HardwareDetector {
         try {
             if (navigator.deviceMemory) {
                 memoryInfo.totalGB = navigator.deviceMemory + ' GB';
+                this.log('检测到内存容量', memoryInfo.totalGB);
             } else {
+                this.log('navigator.deviceMemory不可用');
                 memoryInfo.totalGB = '8 GB+';
             }
 
@@ -234,20 +247,23 @@ class HardwareDetector {
                 
                 memoryInfo.usedGB = (usedMB / 1024).toFixed(2) + ' GB';
                 memoryInfo.availableGB = ((totalMB - usedMB) / 1024).toFixed(2) + ' GB';
+                this.log('内存使用情况', { totalMB, usedMB });
             }
 
             if (!navigator.deviceMemory) {
                 const estimate = this.estimateMemory();
                 if (estimate) {
                     memoryInfo.totalGB = estimate + ' GB';
+                    this.log('估算内存容量', memoryInfo.totalGB);
                 }
             }
         } catch (e) {
-            console.log('内存检测受限', e);
+            this.log('内存检测受限', e.message);
             memoryInfo.totalGB = '8 GB+';
         }
 
         this.hardwareInfo.memory = memoryInfo;
+        this.log('内存检测完成', memoryInfo);
     }
 
     estimateMemory() {
@@ -268,6 +284,7 @@ class HardwareDetector {
     }
 
     async detectGPU() {
+        this.log('开始检测GPU');
         let gpuInfo = {
             model: '未知显卡',
             vendor: 'N/A',
@@ -288,11 +305,13 @@ class HardwareDetector {
                 if (debugInfo) {
                     gpuInfo.model = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
                     gpuInfo.vendor = gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL);
-                    
                     gpuInfo.driver = gpuInfo.vendor;
+                    this.log('获取到WebGL调试信息', { model: gpuInfo.model, vendor: gpuInfo.vendor });
                 } else {
                     gpuInfo.model = gl.getParameter(gl.RENDERER);
                     gpuInfo.vendor = gl.getParameter(gl.VENDOR);
+                    gpuInfo.driver = gpuInfo.vendor;
+                    this.log('获取到基础WebGL信息', { model: gpuInfo.model, vendor: gpuInfo.vendor });
                 }
 
                 if (!gpuInfo.model || gpuInfo.model === 'unknown') {
@@ -307,40 +326,49 @@ class HardwareDetector {
             const gl2 = canvas2.getContext('webgl2');
             if (gl2) {
                 gpuInfo.api = 'WebGL 2.0';
+                this.log('支持WebGL 2.0');
             }
         } catch (e) {
-            console.log('GPU检测受限', e);
+            this.log('GPU检测受限', e.message);
         }
 
         const ua = navigator.userAgent.toLowerCase();
-        if (ua.includes('nvidia') || gpuInfo.model.toLowerCase().includes('nvidia')) {
+        const modelLower = gpuInfo.model.toLowerCase();
+        
+        if (ua.includes('nvidia') || modelLower.includes('nvidia')) {
             gpuInfo.vendor = 'NVIDIA';
-        } else if (ua.includes('amd') || gpuInfo.model.toLowerCase().includes('amd') || gpuInfo.model.toLowerCase().includes('radeon')) {
+            this.log('识别到NVIDIA显卡');
+        } else if (ua.includes('amd') || modelLower.includes('amd') || modelLower.includes('radeon')) {
             gpuInfo.vendor = 'AMD';
-        } else if (ua.includes('intel') || gpuInfo.model.toLowerCase().includes('intel')) {
+            this.log('识别到AMD显卡');
+        } else if (ua.includes('intel') || modelLower.includes('intel')) {
             gpuInfo.vendor = 'Intel';
-        } else if (ua.includes('apple') || gpuInfo.model.toLowerCase().includes('apple')) {
+            this.log('识别到Intel显卡');
+        } else if (ua.includes('apple') || modelLower.includes('apple')) {
             gpuInfo.vendor = 'Apple';
+            this.log('识别到Apple显卡');
         }
 
-        if (gpuInfo.model.toLowerCase().includes('apple')) {
+        if (modelLower.includes('apple')) {
             gpuInfo.vramGB = '集成';
-        } else if (gpuInfo.model.toLowerCase().includes('4090')) {
+        } else if (modelLower.includes('4090')) {
             gpuInfo.vramGB = '24 GB';
-        } else if (gpuInfo.model.toLowerCase().includes('4080')) {
+        } else if (modelLower.includes('4080')) {
             gpuInfo.vramGB = '16 GB';
-        } else if (gpuInfo.model.toLowerCase().includes('4070')) {
+        } else if (modelLower.includes('4070')) {
             gpuInfo.vramGB = '8/12 GB';
-        } else if (gpuInfo.model.toLowerCase().includes('3090')) {
+        } else if (modelLower.includes('3090')) {
             gpuInfo.vramGB = '24 GB';
-        } else if (gpuInfo.model.toLowerCase().includes('3080')) {
+        } else if (modelLower.includes('3080')) {
             gpuInfo.vramGB = '10/12 GB';
         }
 
         this.hardwareInfo.gpu = gpuInfo;
+        this.log('GPU检测完成', gpuInfo);
     }
 
     async detectStorage() {
+        this.log('开始检测存储');
         let storageInfo = {
             type: 'SSD/HDD',
             totalGB: 'N/A',
@@ -350,6 +378,7 @@ class HardwareDetector {
         try {
             if ('storage' in navigator && 'estimate' in navigator.storage) {
                 const estimate = await navigator.storage.estimate();
+                this.log('Storage API返回', estimate);
                 if (estimate.quota) {
                     const quotaGB = (estimate.quota / 1024 / 1024 / 1024).toFixed(1);
                     const usageGB = (estimate.usage / 1024 / 1024 / 1024).toFixed(1);
@@ -358,7 +387,7 @@ class HardwareDetector {
                 }
             }
         } catch (e) {
-            console.log('存储检测受限', e);
+            this.log('存储检测受限', e.message);
         }
 
         try {
@@ -386,19 +415,26 @@ class HardwareDetector {
         }
 
         this.hardwareInfo.storage = storageInfo;
+        this.log('存储检测完成', storageInfo);
     }
 
     async detectAll() {
+        this.log('开始硬件检测');
         await Promise.all([
             this.detectCPU(),
             this.detectMemory(),
             this.detectGPU(),
             this.detectStorage()
         ]);
+        this.log('硬件检测完成', this.hardwareInfo);
         return this.hardwareInfo;
     }
 
     getInfo() {
         return this.hardwareInfo;
+    }
+
+    getLog() {
+        return this.detectionLog;
     }
 }

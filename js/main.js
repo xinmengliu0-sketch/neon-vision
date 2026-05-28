@@ -106,6 +106,38 @@ class PerformanceApp {
         document.getElementById('hwOs').textContent = this.hardwareInfo.system.os;
         document.getElementById('hwBrowser').textContent = this.hardwareInfo.system.browser;
         document.getElementById('hwPlatform').textContent = navigator.userAgent.slice(0, 100) + '...';
+
+        // 更新检测日志
+        this.updateDetectionLog();
+    }
+
+    updateDetectionLog() {
+        const logContainer = document.getElementById('detectionLog');
+        if (!logContainer) return;
+        
+        const logs = this.hardwareDetector.getLog();
+        logContainer.innerHTML = '';
+        
+        if (logs.length === 0) {
+            logContainer.innerHTML = '<p>暂无检测日志</p>';
+            return;
+        } else {
+            logs.forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.style.marginBottom = '8px';
+                logEntry.style.padding = '8px';
+                logEntry.style.borderBottom = '1px solid var(--border-color)';
+                logEntry.style.borderRadius = '4px';
+                
+                let logHtml = `<div style="color: var(--primary-light); font-weight: bold; margin-bottom: 4px;">${log.time}</div>`;
+                logHtml += `<div>${log.message}</div>`;
+                if (log.data) {
+                    logHtml += `<div style="margin-top: 4px; font-size: 11px; opacity: 0.8;">${JSON.stringify(log.data, null, 2).replace(/\n/g, '<br>').replace(/ /g, '&nbsp;')}</div>`;
+                }
+                logEntry.innerHTML = logHtml;
+                logContainer.appendChild(logEntry);
+            });
+        }
     }
 
     updateTestSelection() {

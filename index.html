@@ -281,6 +281,45 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- 检测说明 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon system-icon">ℹ️</div>
+                            <h2 class="card-title">检测说明</h2>
+                        </div>
+                        <div style="padding: 15px;">
+                            <p style="color: var(--text-secondary); margin-bottom: 10px; line-height: 1.6;">
+                                <strong>浏览器安全限制说明：</strong>
+                            </p>
+                            <p style="color: var(--text-secondary); margin-bottom: 10px; line-height: 1.6;">
+                                由于浏览器的安全沙箱机制，本工具无法像原生应用那样直接访问系统底层的硬件信息。
+                                我们通过以下方式获取信息：
+                            </p>
+                            <ul style="color: var(--text-secondary); margin-left: 20px; line-height: 1.8;">
+                                <li><strong>WebGL调试信息</strong> - 获取显卡型号和厂商信息</li>
+                                <li><strong>Navigator API</strong> - 获取CPU核心数和内存容量</li>
+                                <li><strong>UserAgent分析</strong> - 识别操作系统和浏览器</li>
+                                <li><strong>性能基准测试</strong> - 评估硬件性能等级</li>
+                            </ul>
+                            <p style="color: var(--text-secondary); margin-top: 10px; line-height: 1.6;">
+                                如果需要更精确的硬件信息，建议使用专门的系统检测软件。
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 检测日志 -->
+                    <div class="detail-card">
+                        <div class="card-header">
+                            <div class="card-icon system-icon">📋</div>
+                            <h2 class="card-title">检测日志</h2>
+                        </div>
+                        <div style="padding: 15px;">
+                            <div id="detectionLog" style="background: var(--bg-primary); border-radius: 8px; padding: 15px; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 12px; color: var(--text-secondary);">
+                                <p>等待检测...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
